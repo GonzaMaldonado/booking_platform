@@ -2,8 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 
 ROLE_CHOICES = (
-    ('user', 'U'),
-    ('company', 'C')
+    ('U', 'user'),
+    ('C', 'company')
 )
 
 # Create your models here.
