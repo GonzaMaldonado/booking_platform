@@ -1,0 +1,35 @@
+
+# Archivos de entorno y configuración local
+.env
+*.pyc
+*.pyo
+*.env
+# Directorio de dependencias de Python
+venv/
+env/
+# Archivos de registro y salida
+*.log
+logs/
+
+# Directorio de archivos estáticos generados
+staticfiles/
+
+# Directorio de medios generados
+media/
+
+# Archivos de base de datos
+db.sqlite3
+*.db
+
+# Archivos de caché
+__pycache__/
+
+# Archivos de migraciones de Django
+*/migrations/
+
+# Archivos generados por IDE o editor de código
+.idea/
+.vscode/
+*.sublime-*
+*.pyc
+*.swp
