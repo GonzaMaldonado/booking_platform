@@ -4,7 +4,7 @@ from .views import HotelViewSet
 
 router = DefaultRouter()
 
-router.register(r'', HotelViewSet, basename='hotel')
+router.register(r'hotel', HotelViewSet, basename='hotel')
 
 urlpatterns = [
     path('', include(router.urls))

@@ -11,6 +11,6 @@ class User(AbstractUser, PermissionsMixin):
     email = models.EmailField()
     photo = models.ImageField(upload_to='users/images/', blank=True, null=True)
     birthday = models.DateField(blank=True, null=True)
-    role = models.CharField(max_length=7, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=1, choices=ROLE_CHOICES)
 
     
