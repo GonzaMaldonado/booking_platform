@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -8,17 +9,68 @@ from .permissions import RolePermission
 from .serializers import HotelSerializer, BookingSerializer, RoomSerializer, CommentSerializer
 from .models import Hotel, Booking, Room, Comment
 
+# gonza6 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg2ODkxNTAyLCJpYXQiOjE2ODY4NjI3MDIsImp0aSI6ImM4ZDNlNmE4MDgwNjQ3ZmFiNjFlNzM2ODUxYTkzMDFhIiwidXNlcl9pZCI6MX0.6YyFuDwoBWJsSxbRUEL3ph4rFAG7aUq-oJAWLmlTllg
+# maldo eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg2ODkxNTc0LCJpYXQiOjE2ODY4NjI3NzQsImp0aSI6IjJjZGQ4ODM3MzA5NjRmMTViZGQ0ZjQxMzFlZGY4YWZkIiwidXNlcl9pZCI6NH0.-4VohsEyJHumM4YEYHBYnZb4AuWPjzBqVJYKdblK4nk
 
 class HotelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, RolePermission]
     serializer_class = HotelSerializer
-    queryset = Hotel.objects.filter(status=True)
+
+
+    def get_object(self):
+        """
+            Obtengo el objeto llamando a super().get_object()
+            Verifico que el usuario que esta haciendo la consulta sea el que creo el objeto
+            En caso contrario devuelvo una respuesta de permiso denegado
+        """
+        hotel = super().get_object()
+
+        if hotel.user != self.request.user:
+            self.permission_denied(self.request)
+
+        return hotel
+
+
+    def get_queryset(self):
+        return Hotel.objects.filter(status=True, user=self.request.user)
+
+    
+    def create(self, request, *args, **kwargs):
+        hotel = self.serializer_class(data=request.data)
+        if hotel.is_valid():
+            hotel.save()
+            return Response({
+                'message': 'Hotel creado correctamente.',
+                'hotel': hotel.data
+            }, status=status.HTTP_201_CREATED)
+        return Response({
+                'message': 'Existen errores en el registro.',
+                'error': hotel.errors
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Para que cuando se cree un hotel se le asigne el usuario que esta haciendo la peticion
+    #def perform_create(self, serializer):
+     #   serializer.save(user=self.request.user)
+
 
 
 class BookingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = BookingSerializer
-    queryset = Booking.objects.filter(status=True)
+    
+
+    def get_object(self):
+        booking = super().get_object()
+
+        if booking.user != self.request.user:
+            self.permission_denied(self.request)
+
+        return booking
+
+
+    def get_queryset(self):
+        return Booking.objects.filter(status=True, user=self.request.user)
+    
 
     def create(self, request, *args, **kwargs):
         booking = request.data
@@ -35,7 +87,7 @@ class BookingViewSet(viewsets.ModelViewSet):
         if booking_serializer.is_valid():
             booking_serializer.save()
             return Response({
-                'message': 'Booking created successfully',
+                'message': 'Reserva creada exitosamente.',
                 'booking': booking_serializer.data,
             },status=status.HTTP_201_CREATED)
         return Response({
@@ -43,15 +95,28 @@ class BookingViewSet(viewsets.ModelViewSet):
             'error': booking_serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
     
+
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
 
 
-class RoomviewSet(viewsets.ModelViewSet):
+class RoomViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, RolePermission]
     serializer_class = RoomSerializer
-    queryset = Room.objects.filter(status=True)
+
+
+    def get_object(self):
+        room = super().get_object()
+
+        if room.hotel.user != self.request.user:
+            self.permission_denied(self.request)
+
+        return room
+    
+
+    def get_queryset(self):
+        return Room.objects.filter(status=True, hotel__user=self.request.user)
 
 
     def filter_queryset(self, queryset):
@@ -76,4 +141,12 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = CommentSerializer
     queryset = Comment.objects.filter(status=True)
+
+    def get_object(self):
+        comment = super().get_object()
+
+        if comment.user != self.request.user:
+            self.permission_denied(self.request)
+
+        return comment
     

@@ -1,12 +1,20 @@
 
+import environ
+import os
+
+env = environ.Env()
+environ.Env.read_env()
+
 from datetime import timedelta
 from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-ofhp^l!!do7t0crhiqoyx7ti($5x#w#yhu*ko#3-0l!05*e0b4'
+#SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'hola-mundo-con-django'
 
+#DEBUG = os.environ.get('DEBUG')
 DEBUG = True
 
 ALLOWED_HOSTS = []
@@ -138,8 +146,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

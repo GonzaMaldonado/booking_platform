@@ -6,6 +6,10 @@ class HotelSerializer(serializers.ModelSerializer):
         model = Hotel
         exclude = ('status', 'created', 'updated', 'deleted')
 
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
 
 class BookingSerializer(serializers.ModelSerializer):
     class Meta:
