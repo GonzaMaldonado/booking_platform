@@ -28,7 +28,7 @@ class Hotel(Base):
 
 class Room(Base):
     hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
-    number = models.CharField(max_length=50, unique=True)
+    number = models.CharField(max_length=50)
     capacity = models.PositiveIntegerField()
     price_day = models.DecimalField(max_digits=10, decimal_places=2,default=0)
     description = models.TextField()
@@ -53,7 +53,7 @@ class Booking(Base):
     total_price = models.DecimalField(max_digits=10, decimal_places=2,default=0)
 
     def __str__(self):
-        return self.id
+        return f'{self.id}'
 
 
 class Comment(Base):

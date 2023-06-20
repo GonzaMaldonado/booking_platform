@@ -1,4 +1,5 @@
 from datetime import datetime
+import pytz
 from rest_framework import serializers
 from .models import Hotel, Booking, Room, Comment
 
@@ -25,8 +26,10 @@ class BookingSerializer(serializers.ModelSerializer):
 
 
     def validate(self, attrs):
-        now = datetime.now()
-        if attrs['start_booking'] < now and attrs['end_booking'] < now:
+        now = datetime.now(pytz.utc)
+        start_booking = attrs['start_booking'].replace(tzinfo=pytz.utc)
+        end_booking = attrs['end_booking'].replace(tzinfo=pytz.utc)
+        if start_booking < now and end_booking < now:
             raise serializers.ValidationError('La fecha no puede establecerse en tiempo pasado')
         return attrs
     
