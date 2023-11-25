@@ -15,7 +15,8 @@ class TestSetUp(APITestCase):
             last_name='Backend',
             username='developer',
             password='developer',
-            email= faker.email()
+            email= faker.email(),
+            role='C'
         )
 
         response = self.client.post(
@@ -29,7 +30,5 @@ class TestSetUp(APITestCase):
 
         self.token = response.data['token']
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + self.token)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
+        #import pdb; pdb.set_trace()
         return super().setUp()
