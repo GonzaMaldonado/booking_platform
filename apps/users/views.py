@@ -23,7 +23,7 @@ class Register(views.APIView):
             login_serializer = TokenObtainPairSerializer(data=request.data)
             if login_serializer.is_valid():
                 return Response({
-                    'token': login_serializer.validated_data.get('access'),
+                    'access': login_serializer.validated_data.get('access'),
                     'refresh': login_serializer.validated_data.get('refresh'),
                     'user': user_serializer.data,
                     'message': 'Usuario creado correctamente'
@@ -46,7 +46,7 @@ class Login(TokenObtainPairView):
             if login_serializer.is_valid():
                 user_serializer = UserSerializer(user)
                 return Response({
-                    'token': login_serializer.validated_data.get('access'),
+                    'access': login_serializer.validated_data.get('access'),
                     'refresh': login_serializer.validated_data.get('refresh'),
                     'user': user_serializer.data,
                     'message': 'Inicio de Sesión exitoso'
