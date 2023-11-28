@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
@@ -7,15 +8,15 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from .permissions import RolePermission
 
-from .serializers import HotelSerializer, BookingSerializer, RoomSerializer, CommentSerializer
-from .models import Hotel, Booking, Room, Comment
+from .serializers import HousingSerializer, BookingSerializer, CommentSerializer
+from .models import Housing, Booking, Comment, Photo
 
 # g6 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3MDU0MDYxLCJpYXQiOjE2ODcwMjUyNjEsImp0aSI6ImFiYzFlNmY5ZWE1NDQ0ZWY5MjhhZTkzNWI2YmNlYTRjIiwidXNlcl9pZCI6MX0.w6q2mw_0s_D0n2TP857Qqvpd-U8HvhK7nwya3OwMBoc
 # m eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3MDUzNTE5LCJpYXQiOjE2ODcwMjQ3MTksImp0aSI6IjBmZjZiYmFkZGI4NjQ5ZjA4YmNiMWRmNGI0YWQ3YmFkIiwidXNlcl9pZCI6NH0.oZwopJ7ztArwIdi9Xe2Mx7RSE2HSO5Dq61lPemzs9Ng
 
-class HotelViewSet(viewsets.ModelViewSet):
+class HousingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, RolePermission]
-    serializer_class = HotelSerializer
+    serializer_class = HousingSerializer
 
 
     def get_object(self):
@@ -24,25 +25,39 @@ class HotelViewSet(viewsets.ModelViewSet):
             Verifico que el usuario que esta haciendo la consulta sea el que creo el objeto
             En caso contrario devuelvo una respuesta de permiso denegado
         """
-        hotel = super().get_object()
+        housing = super().get_object()
 
-        if hotel.user != self.request.user:
+        if housing.user != self.request.user:
             self.permission_denied(self.request)
 
-        return hotel
+        return housing
 
 
     def get_queryset(self):
         """
-        Para que un usuario pueda obtener una lista solo de sus hoteles
+        Para que un usuario pueda obtener una lista de sus alojamientos
         """
-        return Hotel.objects.filter(status=True, user=self.request.user)
+        return Housing.objects.filter(status=True, user=self.request.user)
     
-    @action(methods=['get'], detail=False)
-    def get_all_hotels(self, request):
+
+    @action(methods=['get'], detail=True)
+    def get_housing(self, request, id):
+        """
+        Para que cualquier usuario obtenga una alojamiento en específico
+        """
         self.permission_classes = [IsAuthenticated]
-        hotels = Hotel.objects.filter(status=True)
-        serializer = self.serializer_class(hotels, many=True)
+        housing = get_object_or_404(Housing, id=id)
+        serializer = self.serializer_class(housing, many=False)
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=False)
+    def get_all_housings(self, request):
+        """
+        Para que cualquier usuario obtenga una lista de alojamientos
+        """
+        self.permission_classes = [IsAuthenticated]
+        housings = Housing.objects.filter(status=True)
+        serializer = self.serializer_class(housings, many=True)
         return Response(serializer.data)
 
     
@@ -50,18 +65,45 @@ class HotelViewSet(viewsets.ModelViewSet):
         # Hago una copia del data para agregar el user asociado
         data = request.data.copy()
         data['user'] = request.user.id
+    
+        image_1 = request.FILES.get('image_1')
+        image_2 = request.FILES.get('image_2')
+        image_3 = request.FILES.get('image_3')
+        image_4 = request.FILES.get('image_4')
+        image_5 = request.FILES.get('image_5')
 
-        hotel = self.serializer_class(data=data)
-        if hotel.is_valid():
-            hotel.save()
+        photo = Photo.objects.create(image_1=image_1, image_2=image_2, image_3=image_3, image_4=image_4, image_5=image_5)
+        data['photos'] = photo.id
+
+        housing = self.serializer_class(data=data)
+        if housing.is_valid():
+            housing.save()
             return Response({
-                'message': 'Hotel creado correctamente.',
-                'hotel': hotel.data
+                'message': 'Alojamiento creado correctamente.',
+                'housing': housing.data
             }, status=status.HTTP_201_CREATED)
         return Response({
                 'message': 'Existen errores en el registro.',
-                'error': hotel.errors
+                'error': housing.errors
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def filter_queryset(self, queryset):
+        #start_booking = self.request.query_params.get('start_booking')
+        #end_booking = self.request.query_params.get('end_booking') creo que esto va en booking
+        max_price = self.request.query_params.get('max_price')
+        min_price = self.request.query_params.get('min_price')
+
+        #if start_booking and end_booking:
+         #   queryset = queryset.filter(
+          #      Q(booking__start_booking__lt=start_booking, booking__end_booking__gt=start_booking) &
+           #     Q(booking__start_booking__lt=end_booking, booking__end_booking__gt=end_booking) 
+            #)
+
+        if max_price and min_price:
+            queryset = queryset.filter(price_day__gte=min_price, price_day__lte=max_price)
+
+        return queryset
 
 
 
@@ -85,13 +127,13 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         booking = request.data.copy()
-        room = Room.objects.filter(id=request.data['room']).first()
+        housing = Housing.objects.filter(id=request.data['housing']).first()
 
         datetime1 = datetime.strptime(booking['start_booking'], '%Y-%m-%dT%H:%M:%S.%fZ')
         datetime2 = datetime.strptime(booking['end_booking'], '%Y-%m-%dT%H:%M:%S.%fZ')
         num_noches = abs((datetime1 - datetime2).days)
 
-        booking['total_price'] = room.price_day * num_noches
+        booking['total_price'] = housing.price_day * num_noches
         booking['status_booking'] = 'P'
         booking['user'] = request.user.id
         
@@ -119,8 +161,8 @@ class BookingViewSet(viewsets.ModelViewSet):
 
         booking['user'] = request.user.id
         
-        if 'room' in request.data:
-            room = Room.objects.filter(id=request.data['room']).first()
+        if 'housing' in request.data:
+            housing = Housing.objects.filter(id=request.data['housing']).first()
   
 
         if 'start_booking' in request.data and 'end_booking' in request.data:
@@ -128,7 +170,7 @@ class BookingViewSet(viewsets.ModelViewSet):
             datetime2 = datetime.strptime(booking['end_booking'], '%Y-%m-%dT%H:%M:%S.%fZ')
             num_noches = abs((datetime1 - datetime2).days)
 
-            booking['total_price'] = room.price_day * num_noches
+            booking['total_price'] = housing.price_day * num_noches
             
             reserva_existente = Booking.objects.filter(
                 Q(start_booking__lte=booking['start_booking']) & Q(end_booking__gte=booking['end_booking']) & Q(room=booking['room'])
@@ -149,102 +191,6 @@ class BookingViewSet(viewsets.ModelViewSet):
             'error': booking_serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-class RoomViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated, RolePermission]
-    serializer_class = RoomSerializer
-
-
-    def get_object(self):
-        room = super().get_object()
-
-        if room.hotel.user != self.request.user:
-            self.permission_denied(self.request)
-
-        return room
-    
-
-    def get_queryset(self):
-        return Room.objects.filter(status=True, hotel__user=self.request.user)
-    
-    @action(methods=['get'], detail=False)
-    def get_all_rooms(self, request):
-        self.permission_classes = [IsAuthenticated]
-        room = Room.objects.filter(status=True).order_by('hotel')
-        serializer = RoomSerializer(room, many=True)
-        return Response(serializer.data)
-
-
-    def create(self, request, *args, **kwargs):
-        #Comprobar que el usuario que crea la habitación sea el propietario del hotel
-        hotels = Hotel.objects.filter(status=True, user=request.user)
-        hotels = list(hotels)
-
-        if len(hotels) == 0:
-            return Response({'error': 'Debe tener un hotel antes de crear habitaciones'}, status=status.HTTP_400_BAD_REQUEST)
-        
-        for hotel in hotels:
-            room = self.serializer_class(data=request.data)
-            if room.is_valid():
-                if int(hotel.id) == int(request.data['hotel']):
-                    room.save()
-                    return Response({
-                        'message': 'Habitación creada correctamente',
-                        'room': room.data
-                    }, status=status.HTTP_201_CREATED)
-                
-                return Response({'error': 'No puede crear habitaciones que no pertenezcan a su hotel'},
-                                status=status.HTTP_401_UNAUTHORIZED)
-            
-            return Response({
-                'message': 'Exiten errores en el registro',
-                'error': room.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
-                    
-        
-
-    def update(self, request, *args, **kwargs):
-        hotels = Hotel.objects.filter(status=True, user=request.user)
-        hotels = list(hotels)
-    
-        for hotel in hotels:
-            room = self.serializer_class(instance=self.get_object(), data=request.data)
-            if room.is_valid():
-                if int(hotel.id) == int(request.data['hotel']):
-                    room.save()
-                    return Response({
-                        'message': 'Habitación actualizada correctamente',
-                        'room': room.data
-                    })
-                    
-                return Response({'error': 'No puede actualizar habitaciones que no pertenezcan a su hotel'},
-                                status=status.HTTP_401_UNAUTHORIZED)
-                
-            return Response({
-                'message': 'Exiten errores en el registro',
-                'error': room.errors
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-    
-
-
-    def filter_queryset(self, queryset):
-        #start_booking = self.request.query_params.get('start_booking')
-        #end_booking = self.request.query_params.get('end_booking') creo que esto va en booking
-        max_price = self.request.query_params.get('max_price')
-        min_price = self.request.query_params.get('min_price')
-
-        #if start_booking and end_booking:
-         #   queryset = queryset.filter(
-          #      Q(booking__start_booking__lt=start_booking, booking__end_booking__gt=start_booking) &
-           #     Q(booking__start_booking__lt=end_booking, booking__end_booking__gt=end_booking) 
-            #)
-
-        if max_price and min_price:
-            queryset = queryset.filter(price_day__gte=min_price, room__price_day__lte=max_price)
-
-        return queryset
 
 
 class CommentViewSet(viewsets.ModelViewSet):

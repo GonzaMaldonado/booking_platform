@@ -1,14 +1,14 @@
 from datetime import datetime
 import pytz
 from rest_framework import serializers
-from .models import Hotel, Booking, Room, Comment
+from .models import Housing, Booking, Comment
 
-class HotelSerializer(serializers.ModelSerializer):
+class HousingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Hotel
+        model = Housing
         exclude = ('status', 'created', 'updated', 'deleted')
 
-    def to_representation(self, instance):
+    """ def to_representation(self, instance):
         return {
             'user': instance.user.username,
             'name': instance.name,
@@ -16,7 +16,7 @@ class HotelSerializer(serializers.ModelSerializer):
             'description': instance.description if instance.description != '' else '',
             'photo': instance.photo.url,
             'services': instance.services
-        }
+        } """
 
 
 class BookingSerializer(serializers.ModelSerializer):
@@ -33,12 +33,6 @@ class BookingSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('La fecha no puede establecerse en tiempo pasado')
         return attrs
     
-
-
-class RoomSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Room
-        exclude = ('status', 'created', 'updated', 'deleted')
 
 
 class CommentSerializer(serializers.ModelSerializer):

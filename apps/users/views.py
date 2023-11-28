@@ -7,6 +7,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from drf_yasg.utils import swagger_auto_schema
+
 from .serializers import UserSerializer, RegisterSerializer
 from .models import User
 
@@ -73,8 +75,9 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
 
-    
+    @swagger_auto_schema(auto_schema=None)
     def create(self, request, *args, **kwargs):
+        """ Al tener Register para la creación de usuarios, no necesito un create """
         pass
 
 
