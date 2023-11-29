@@ -37,7 +37,7 @@ class Housing(Base):
     country = models.CharField(max_length=50)
     description = models.TextField(max_length=255, blank=True, null=True)
     photos = models.OneToOneField(Photo, related_name='housings', on_delete=models.CASCADE)
-    services = models.ManyToManyField(Service, related_name='housings', blank=True, null=True)
+    services = models.ManyToManyField(Service, related_name='housings', blank=True)
     capacity = models.PositiveIntegerField()
     pets = models.BooleanField(default=True)
     price_day = models.DecimalField(max_digits=10, decimal_places=2, default=0)

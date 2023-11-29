@@ -1,10 +1,8 @@
 from datetime import datetime
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
 
-from rest_framework import viewsets, status
+from rest_framework import viewsets, generics, status
 from rest_framework.response import Response
-from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from .permissions import RolePermission
 
@@ -14,10 +12,38 @@ from .models import Housing, Booking, Comment, Photo
 # g6 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3MDU0MDYxLCJpYXQiOjE2ODcwMjUyNjEsImp0aSI6ImFiYzFlNmY5ZWE1NDQ0ZWY5MjhhZTkzNWI2YmNlYTRjIiwidXNlcl9pZCI6MX0.w6q2mw_0s_D0n2TP857Qqvpd-U8HvhK7nwya3OwMBoc
 # m eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3MDUzNTE5LCJpYXQiOjE2ODcwMjQ3MTksImp0aSI6IjBmZjZiYmFkZGI4NjQ5ZjA4YmNiMWRmNGI0YWQ3YmFkIiwidXNlcl9pZCI6NH0.oZwopJ7ztArwIdi9Xe2Mx7RSE2HSO5Dq61lPemzs9Ng
 
+class HousingListView(generics.ListAPIView):
+    """
+        Para que cualquier usuario obtenga una lista de alojamientos
+    """
+    serializer_class = HousingSerializer
+
+    def get_queryset(self):
+        queryset = Housing.objects.all()
+        for housing in queryset:
+            photos = Photo.objects.get(id=housing.photos.id)
+            print(photos, '\n', housing)
+        return queryset
+
+
+class HousingDetailView(generics.RetrieveAPIView):
+    """
+        Para que cualquier usuario obtenga una alojamiento en específico
+    """
+    queryset = Housing.objects.all()
+    serializer_class = HousingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        housing = super().get_object()
+        photos = Photo.objects.get(id=housing.photos.id)
+        return housing
+    
+
+
 class HousingViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, RolePermission]
     serializer_class = HousingSerializer
-
 
     def get_object(self):
         """
@@ -38,27 +64,6 @@ class HousingViewSet(viewsets.ModelViewSet):
         Para que un usuario pueda obtener una lista de sus alojamientos
         """
         return Housing.objects.filter(status=True, user=self.request.user)
-    
-
-    @action(methods=['get'], detail=True)
-    def get_housing(self, request, id):
-        """
-        Para que cualquier usuario obtenga una alojamiento en específico
-        """
-        self.permission_classes = [IsAuthenticated]
-        housing = get_object_or_404(Housing, id=id)
-        serializer = self.serializer_class(housing, many=False)
-        return Response(serializer.data)
-
-    @action(methods=['get'], detail=False)
-    def get_all_housings(self, request):
-        """
-        Para que cualquier usuario obtenga una lista de alojamientos
-        """
-        self.permission_classes = [IsAuthenticated]
-        housings = Housing.objects.filter(status=True)
-        serializer = self.serializer_class(housings, many=True)
-        return Response(serializer.data)
 
     
     def create(self, request, *args, **kwargs):
@@ -72,8 +77,8 @@ class HousingViewSet(viewsets.ModelViewSet):
         image_4 = request.FILES.get('image_4')
         image_5 = request.FILES.get('image_5')
 
-        photo = Photo.objects.create(image_1=image_1, image_2=image_2, image_3=image_3, image_4=image_4, image_5=image_5)
-        data['photos'] = photo.id
+        photos = Photo.objects.create(image_1=image_1, image_2=image_2, image_3=image_3, image_4=image_4, image_5=image_5)
+        data['photos'] = photos.id
 
         housing = self.serializer_class(data=data)
         if housing.is_valid():
@@ -82,6 +87,8 @@ class HousingViewSet(viewsets.ModelViewSet):
                 'message': 'Alojamiento creado correctamente.',
                 'housing': housing.data
             }, status=status.HTTP_201_CREATED)
+        
+        photos.delete()
         return Response({
                 'message': 'Existen errores en el registro.',
                 'error': housing.errors
