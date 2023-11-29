@@ -1,16 +1,16 @@
 from django.contrib import admin
-from .models import Hotel, Booking, Room, Comment
+from .models import Housing, Booking, Comment
 from apps.users.models import User
 
 
-class HotelAdmin(admin.ModelAdmin):
+class HousingAdmin(admin.ModelAdmin):
 
-    # Devolver Hoteles relacionados con el usuario
+    # Devolver Housinges relacionados con el usuario
     def get_queryset(self, request):
         if request.user.is_superuser:
-            return Hotel.objects.all()
+            return Housing.objects.all()
         else:
-            return Hotel.objects.filter(user=request.user)
+            return Housing.objects.filter(user=request.user)
 
     # Devolver nombre de usuario relacionado con el usuario autenticado
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -22,19 +22,6 @@ class HotelAdmin(admin.ModelAdmin):
 
 
 
-class RoomAdmin(admin.ModelAdmin):
-
-    # Devolver Hoteles relacionados con el usuario
-    def get_queryset(self, request):
-        if request.user.is_superuser:
-            return Room.objects.all()
-        else:
-            return Room.objects.filter(hotel__user=request.user)
-
-
-
-
-admin.site.register(Hotel, HotelAdmin)
+admin.site.register(Housing, HousingAdmin)
 admin.site.register(Booking)
-admin.site.register(Room, RoomAdmin)
 admin.site.register(Comment)

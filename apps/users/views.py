@@ -7,6 +7,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from drf_yasg.utils import swagger_auto_schema
+
 from .serializers import UserSerializer, RegisterSerializer
 from .models import User
 
@@ -23,7 +25,7 @@ class Register(views.APIView):
             login_serializer = TokenObtainPairSerializer(data=request.data)
             if login_serializer.is_valid():
                 return Response({
-                    'token': login_serializer.validated_data.get('access'),
+                    'access': login_serializer.validated_data.get('access'),
                     'refresh': login_serializer.validated_data.get('refresh'),
                     'user': user_serializer.data,
                     'message': 'Usuario creado correctamente'
@@ -46,7 +48,7 @@ class Login(TokenObtainPairView):
             if login_serializer.is_valid():
                 user_serializer = UserSerializer(user)
                 return Response({
-                    'token': login_serializer.validated_data.get('access'),
+                    'access': login_serializer.validated_data.get('access'),
                     'refresh': login_serializer.validated_data.get('refresh'),
                     'user': user_serializer.data,
                     'message': 'Inicio de Sesión exitoso'
@@ -73,8 +75,9 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
 
-    
+    @swagger_auto_schema(auto_schema=None)
     def create(self, request, *args, **kwargs):
+        """ Al tener Register para la creación de usuarios, no necesito un create """
         pass
 
 
