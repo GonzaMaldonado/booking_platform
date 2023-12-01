@@ -1,6 +1,22 @@
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User
 
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add custom claims
+        token['username'] = user.username
+        token['is_staff'] = user.is_staff
+        token['role'] = user.role
+        if user.photo != '':
+            token['photo'] = user.photo.url
+        else:
+            token['photo'] = ''
+
+        return token
 
 # Usos en UserViewSet
 class UserSerializer(serializers.ModelSerializer):

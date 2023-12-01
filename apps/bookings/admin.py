@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Housing, Booking, Comment
+from .models import Housing, Booking, Comment, Photo, Service
 from apps.users.models import User
 
 
@@ -25,3 +25,5 @@ class HousingAdmin(admin.ModelAdmin):
 admin.site.register(Housing, HousingAdmin)
 admin.site.register(Booking)
 admin.site.register(Comment)
+admin.site.register(Photo)
+admin.site.register(Service)

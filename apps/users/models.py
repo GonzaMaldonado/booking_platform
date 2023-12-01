@@ -16,6 +16,8 @@ class User(AbstractUser, PermissionsMixin):
     phone_number = models.CharField(max_length=30, blank=True, null=True)
     
     def __str__(self):
+        if self.first_name == '' and self.last_name == '':
+            return f'{self.username}'
         return f'{self.first_name} {self.last_name}'
     
     

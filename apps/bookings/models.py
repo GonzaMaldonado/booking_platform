@@ -22,6 +22,7 @@ class Service(models.Model):
         return self.name
     
 class Photo(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     image_1 = models.ImageField(upload_to='photos/')
     image_2 = models.ImageField(upload_to='photos/', blank=True, null=True)
     image_3 = models.ImageField(upload_to='photos/', blank=True, null=True)
