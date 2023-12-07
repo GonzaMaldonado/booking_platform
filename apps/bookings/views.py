@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .permissions import RolePermission
 
-from .serializers import HousingSerializer, BookingSerializer, CommentSerializer
-from .models import Housing, Booking, Comment, Photo
+from .serializers import HousingSerializer, BookingSerializer, CommentSerializer, ServiceSerializer
+from .models import Housing, Booking, Comment, Photo, Service
 
 # g6 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3MDU0MDYxLCJpYXQiOjE2ODcwMjUyNjEsImp0aSI6ImFiYzFlNmY5ZWE1NDQ0ZWY5MjhhZTkzNWI2YmNlYTRjIiwidXNlcl9pZCI6MX0.w6q2mw_0s_D0n2TP857Qqvpd-U8HvhK7nwya3OwMBoc
 # m eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3MDUzNTE5LCJpYXQiOjE2ODcwMjQ3MTksImp0aSI6IjBmZjZiYmFkZGI4NjQ5ZjA4YmNiMWRmNGI0YWQ3YmFkIiwidXNlcl9pZCI6NH0.oZwopJ7ztArwIdi9Xe2Mx7RSE2HSO5Dq61lPemzs9Ng
@@ -213,3 +213,10 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         return comment
     
+
+class ServicesListView(generics.ListAPIView):
+    """
+        Para obtener una lista de servicios
+    """
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer

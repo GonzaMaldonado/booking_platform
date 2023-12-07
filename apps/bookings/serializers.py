@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytz
 from rest_framework import serializers
-from .models import Housing, Booking, Comment
+from .models import Housing, Booking, Comment, Service
 
 class HousingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,3 +39,9 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         exclude = ('status', 'created', 'updated', 'deleted')
+
+
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = '__all__'

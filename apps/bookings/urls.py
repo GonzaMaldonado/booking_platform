@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import  HousingListView, HousingDetailView, HousingViewSet, BookingViewSet, CommentViewSet
+from .views import  HousingListView, HousingDetailView, HousingViewSet, BookingViewSet, CommentViewSet, ServicesListView
 
 router = DefaultRouter()
 
@@ -11,5 +11,6 @@ router.register(r'comment', CommentViewSet, basename='comment')
 urlpatterns = [
     path('get_all_housings/', HousingListView.as_view()),
     path('get_housing/<int:id>/', HousingDetailView.as_view()),
+    path('all_services/', ServicesListView.as_view()),
     path('', include(router.urls))
 ]
